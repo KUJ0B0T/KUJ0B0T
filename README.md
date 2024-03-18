@@ -669,8 +669,50 @@
   데이터를 받을 모달에 넣은 코드
   th:attr="id='qcModal'+${products}”
   ```
-  역시 모달에서 Thyleaf를 사용해서 product를 찾으려 했으나, 인식을 못해서 실패
-  
+  역시 모달에서 Thyleaf를 사용해서 product를 찾으려 했으나, 인식을 못해서 실패<br>
+
+  3차 :
+  ```html
+  <td>
+	  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#qcModal" th:attr="onclick='openModal(\'' + ${product.product_id} + '\', \'' + ${product.lot.lot_id} + '\', \'' + ${product.volume} + '\', \'' + ${product.getNib} + '\', \'' +           ${product.assembly_body} + '\', \'' + ${product.assembly_cap} + '\', \'' + ${product.acceptance} + '\', \'' + ${product.lot.getCreatedDate()} + '\', \'' + ${product.lot.getModifiedDate()} + '\')'">
+		선택
+	  </button>
+  </td>
+  ```
+  데이터를 하나씩 하나씩 보내는 방식으로 모든 데이터를 보냈음. 보낸 데이터는 자바 스크립트를 통해서 다시 모달로 보내주는 방식으로 해결
+
+  ```javascript
+    function openModal(productId, lotId, inkCapacity, nibDepth, assemblyBody, assemblyCap, acceptance, createdDate, modifiedDate, comment) {
+    // 선택한 제품의 데이터를 모달에 전달
+    document.getElementById('productId').innerText = productId;
+    document.getElementById('lot_id').innerText = lotId;
+    document.getElementById('ink_capacity').innerText = inkCapacity;
+    document.getElementById('nib_depth').innerText = nibDepth == "null" ? '미결합' : nibDepth + "mm";
+    document.getElementById('assembly_body').innerText = assemblyBody === "Y" ? '결합' : '미결합';
+    document.getElementById('assembly_cap').innerText = assemblyCap  === "Y" ? '결합' : '미결합';
+    
+    if (acceptance === "P") {
+    document.getElementById('acceptanceG').checked = true;
+    document.getElementById('acceptanceB').checked = false;
+    document.getElementById('comment').disabled = true;
+    
+    } else {
+    document.getElementById('acceptanceG').checked = false;
+    document.getElementById('acceptanceB').checked = true;
+    document.getElementById('comment').disabled = false;
+    }
+    document.getElementById('start_date').innerText = createdDate;
+    document.getElementById('end_date').innerText = modifiedDate;
+    
+    document.getElementById('comment').innerText = comment;
+    if (comment === "null") {
+        document.getElementById('comment').innerText ="";
+    }
+    $('#qcModal').modal('show');
+    // productId를 hidden 필드에 설정
+        document.getElementById('product_id').value = productId;
+    }
+  ```
   
 </details>
 <br><br><br><br>
