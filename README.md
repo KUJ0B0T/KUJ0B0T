@@ -566,7 +566,9 @@
   또한 한페이지에 10개씩 페이지네이션을 했으나, 어떤 페이지에서는 2개, 어떤 페이지에서는 4개 등 정상적으로 설정된 사이즈만큼 데이터가 출력되지 않음.<br><br>
   
   <b>&gt;원인</b><br>
-  페이지네이션 자체가 모든 제품 데이터 대상이다 보니, 
+  페이지네이션 자체가 모든 제품 데이터 대상이다 보니, 페이지 크기와 페이지 넘버가 전체 제품군이 되어버렸음.<br>
+  그렇기 때문에 한 페이지마다 에러코드를 가진 제품들의 수가 각기 다른 이유가 일단 전체 제품군이 기준인 페이징이 먼저 되고, 그 다음 에러코드를 가진 것을 필터링 하다보니,<br> 
+  한 페이지에 10개씩 제품이 생긴 뒤에 필터링이 되어 갯수가 다 달랐던 것이 었다.
   
   ```java
   @Repository
@@ -576,40 +578,55 @@
     Error findByProduct_errorCode(@RequestParam("id") Long id);
   }
 
-  
   ```
 
   <b>해결 방법</b>
-  &gt; 해당 공정의 생산이 종료된 후 다음 공정으로 넘어가야 하기 때문에 XXXTask() 안에서 다음 공정을 호출하도록 변경
+  &gt; 애초에 대상이 되는 제품군을 선정할 때, 먼저 필터링을 걸어서 에러 코드가 있는 제품만 가져오면 되는 문제였다.
 
   ```java
-  private Runnable firstTask(int count){
-      return () -> {
-          // (중략)
-          try {
-              /*
-                  5초 대기
-                  생산 로직이 종료되자마자 stopSend(); 메서드를 호출하여 sendFuture를 종료시킬 경우
-                  시간의 아다리가 맞지 않으면 최종 양품(good_count)와 불량품(bad_count)의 개수가 클라이언트에게 가지 않음
-                  Ex)
-                  생산 지시 30개 -> 클라이언트가 받은 데이터 { 양품 : 22, 불량품 : 2 }
-                  -> stopSend()가 실행되어 클라이언트는 더 이상 데이터를 받지 못함
-                  그리하여, 메세지를 N초주기로 보내주기 때문에 sendMessageDelay초를 대기한 후
-                  메세지를 더 이상 보내지 않도록 stopSend()메서드를 실행
-              */
-              Thread.sleep(sendMessageDelay);
-          } catch (InterruptedException e) {
-              throw new RuntimeException(e);
-          }
-          stopSend();
-          try {
-              processSecond();
-          } catch (Exception e) {
-              throw new RuntimeException(e);
-          }
-      };
-  }
+   @Query(value = "SELECT * FROM product WHERE error_code != 0", nativeQuery = true)
+    Page<Product> findErrorProductAll(Pageable pageable);
   ```
+  ```java
+  @GetMapping(value = "/products/errors", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String showProduct_errors(Model model, @RequestParam(name = "pageNo",defaultValue = "1")int pageNo, @RequestParam(name = "pageSize",defaultValue = "10")int pageSize) {
+
+        int realPage = pageNo - 1;
+        Page<Product> page = productService.findAllPageForError(realPage, pageSize);
+        List<Product> products = page.getContent();
+//        log.info("수정 전 products : " + products);
+        
+        //제품을 모두 찾는다.
+//        List<Product> products = productService.findAll();
+//        log.info("수정 후 products : " + products);
+
+        //에러 테이블의 페이지네이션을 위한 페이지 데이터를 가져온다.
+//        Page<Error> page_error = errorService.findAllPage(pageNo, pageSize);
+        
+        //에러 디테일 데이터를 가져오기위한 서비스
+        List<Error> errors = errorService.findAllErrors();
+
+        log.info("에러정보 : " + errors);
+
+        model.addAttribute("errors", errors);
+        model.addAttribute("products", products);
+        model.addAttribute("currentPage", realPage);
+        model.addAttribute("totalPages", page.getTotalPages());
+
+        return "products/error_products";
+    }
+}
+  ```
+
+
+</details>
+<details>
+  <summary><b>Thyleaf-Bootstrap 모달 기능 사용간 데이터 전송</b></summary>
+  <b>&gt;현상</b><br>
+  최초 가설을 세울 때에는 '어차피 Thyleaf를 통해서 데이터를 주고받을거니까, 한 html에 있는 form과 modal에서 똑같은 데이터를 쓸 수 있지 않을까?' 싶었음.<br>
+  그러나 Controller에서 html로 보낸 제품의 데이터는 List형식의 product'들' 이었고, 모달에서 내가 선택한 특정 product를 가져오기에는 내 가설이 맞지 않았음.
+  그래서 modal에서 데이터를 제대로 받아오지 못하는 현상이 있었음
+
   
 </details>
 <br><br><br><br>
