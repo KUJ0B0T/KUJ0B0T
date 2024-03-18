@@ -559,46 +559,24 @@
 <span id="7"></span>
 ## 🚀7. 트러블 슈팅
 <details>
-  <summary><b>공정 로직 쓰레드 에러</b></summary>
-  <b>현상</b><br>
-  &gt; 다음의 코드에서 Thread Pool이 2개가 생성되어 있고, 1공정의 생산 쓰레드인 productionFuture가 종료됨과 동시에 메세지를 보내는 쓰레드인 sendFuture를 종료시키기 때문에 1공정이 모두 종료된 후 2공정 메서드가 시작될 것이라고 생각하였지만, 1공정 시작 메서드에서 productionFuture와 sendFuture는 독립적으로 돌아가고 바로 2공정 메서드(processSecond)를 실행시키고 2공정 메서드 안에서 productionFuture와 sendFuture에 또 다시 새로운 future가 들어가 쓰레드의 충돌이 나는 것이라고 생각 됨<br><br>
-  또한 productionFuture가 종료가 된 다음 processSecond()를 호출하기 위해 productionFuture.get()을 사용하게 되면, productionFuture의 작업이 끝날 때까지 Block 되기 때문에 sendFuture가 실행되지 않아 클라이언트가 메세지를 받을 수 없었음
+  <summary><b>페이지네이션 대상 지정 문제</b></summary>
+  <b>&gt;현상</b><br>
+  에러 코드를 가진 제품을 가져오는 기능을 구현하기 위해 JPARepository에서 Page데이터를 추출하는 기능을 사용함. 이때 에러코드를 가지고 있는 제품을 에러 제품이라고 생각해서 그 데이터만 가져오려고 했으나, 페이지네이션 단계에서 전체 데이터를 기준으로 만들어짐<br>
+  전체 데이터 기준으로 만들어지다 보니 에러 코드가 있는 제품은 그대로 잘 표시되지만, 에러 코드가 없는 제품은 null값이 반환되어서 리스트의 한 부분을 차지하는 현상이 발생됨.<br>
+  또한 한페이지에 10개씩 페이지네이션을 했으나, 어떤 페이지에서는 2개, 어떤 페이지에서는 4개 등 정상적으로 설정된 사이즈만큼 데이터가 출력되지 않음.<br><br>
+  
+  <b>&gt;원인</b><br>
+  페이지네이션 자체가 모든 제품 데이터 대상이다 보니, 
   
   ```java
-  private Future<?> sendFuture; // 지속적으로 사용자에게 데이터를 보낼 Future
-  private Future<?> productionFuture; // 생산을 담당할 Future
-  // 1공정 시작
-  public void processFirst(CountForm countForm) throws Exception {
-      log.info("생산량 ={}", countForm.getCount());
-      standard = standardRepository.findById(1L).orElse(null);
-      log.info("1공정 규격 = {}", standard);
-      lot = new Lot();
-      lot.setLot_id(1L);
-      if(!lotRepository.findAll().isEmpty()) {
-          lot.setLot_id(lotRepository.selectMaxLotId()+1);
-      }
+  @Repository
+    public interface ErrorRepository extends JpaRepository<Error, Long> {
 
-      lot.setOutput(countForm.getCount());
-      lot.setStart_time(LocalDateTime.now()); // 생산 시작 시간을 현재 시간으로 저장
-      lot.setFirst_start(LocalDateTime.now()); // 1공정 시작 시간을 현재 시간으로 저장
-      lot.setStatus((char)49); // 상태를 진행 중(1)로 변경
-      log.info("신규 생성될 Lot = {}", lot);
-
-      productList = new ArrayList<>();
-
-      productionFuture = executorService.submit(firstTask(countForm.getCount()));
-      sendFuture = executorService.submit(sendMessage("/process/first"));
-      processSecond();
+    @Query(value = "SELECT * FROM error where error_id = :id", nativeQuery = true)
+    Error findByProduct_errorCode(@RequestParam("id") Long id);
   }
 
-  // 2 공정 시작
-  private void processSecond() throws Exception {
-      // lot에 2공정 시작 시간 추가
-      lot.setSecond_start(LocalDateTime.now());
-      productionFuture = executorService.submit(secondTask());
-      sendFuture = executorService.submit(sendMessage("/process/second"));
-      processThird();
-  }
+  
   ```
 
   <b>해결 방법</b>
