@@ -669,7 +669,7 @@
   데이터를 받을 모달에 넣은 코드
   th:attr="id='qcModal'+${products}”
   ```
-  
+  역시 모달에서 Thyleaf를 사용해서 product를 찾으려 했으나, 인식을 못해서 실패
   
   
 </details>
