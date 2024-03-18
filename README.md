@@ -625,8 +625,52 @@
   <b>&gt;현상</b><br>
   최초 가설을 세울 때에는 '어차피 Thyleaf를 통해서 데이터를 주고받을거니까, 한 html에 있는 form과 modal에서 똑같은 데이터를 쓸 수 있지 않을까?' 싶었음.<br>
   그러나 Controller에서 html로 보낸 제품의 데이터는 List형식의 product'들' 이었고, 모달에서 내가 선택한 특정 product를 가져오기에는 내 가설이 맞지 않았음.
-  그래서 modal에서 데이터를 제대로 받아오지 못하는 현상이 있었음
+  그래서 modal에서 데이터를 제대로 받아오지 못하는 현상이 있었음<br><br>
 
+  아래 코드에서 '수정'버튼을 누르면 그 제품의 상세정보를 띄울 모달이 나오는데, 그때 모달안에 내가 선택한 제품의 데이터가 들어있어야 하는데, 모달에 데이터를 어떻게 보내야 하는가?
+  ```java
+    <tbody class="table-group-divider">
+        <tr th:each="product : ${products}">
+            <td th:text="${product.product_id}"></td>
+            <td class="p-md-2 p-1">
+                <div class="d-flex align-self-center justify-content-center">
+                    <a th:text="${product.lot != null ? product.lot.lot_id : 'N/A'}" th:href="|@{/lots/{id}/detail(id=${product.lot.lot_id})}|" class="fw-bold  link-underline-opacity-0 link-light link-opacity-50-hover"></a>
+                </div>
+            </td>
+            <td th:text="${product.volume + ' ml'}"></td>
+            <td th:text= "${product.nib == null} ? '' : ${product.nib + 'mm'}"></td>
+            <td th:text="${product.assembly_body}"></td>
+            <td th:text="${product.assembly_cap}"></td>
+            <td th:if="${product.acceptance == 'P'}" class="text-primary">적합</td>
+            <td th:if="${product.acceptance == 'F'}" class="text-danger">부적합</td>
+            <td th:text="${product.lot.start_time}"></td>
+            <td th:text="${product.lot.end_time}"></td>
+            <td>
+                <button type="button" class="btn btn-primary"
+                        data-bs-toggle="modal" data-bs-target="#qcModal">
+                    수정
+                </button>
+            </td>
+        </tr>
+        </tbody>
+  ```
+  <b>&gt;해결 방법</b><br>
+  1차 :  
+  ```html 
+  th:onclick="'openModal(\'' + ${product.product_id} + '\', \'' + ${product.lot.lot_id} + '\')'"> 
+  ```
+  이렇게 코드를 작성했으나, product 데이터가 안넘어가서 실패<br>
+
+  2차 :
+  ```html
+  모달로 보내는 버튼에 넣은 코드
+  th:attr="data-target=${'#qcModal'+ products}”
+
+  데이터를 받을 모달에 넣은 코드
+  th:attr="id='qcModal'+${products}”
+  ```
+  
+  
   
 </details>
 <br><br><br><br>
