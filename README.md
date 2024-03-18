@@ -713,7 +713,81 @@
         document.getElementById('product_id').value = productId;
     }
   ```
-  
+
+  ```html
+	<div class="modal fade" id="qcModal" tabindex="-1" aria-labelledby="qcLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-secondary-subtle">
+                    <h1 class="modal-title fs-2 fw-bold" id="qclLabel">품질관리 데이터 등록</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-5" style="background-color: rgba(41,17,8,0.22);">
+                    <form class="row g-3" method="post" th:action="@{/products/commentSave}">
+                        <div class="col-6">
+                            <h5>제품 번호: <span id="productId" class="fw-bold"></span></h5>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Lot 번호: <span id="lot_id" class="fw-bold"></span></h5>
+                        </div>
+                        <hr>
+                        <div class="col-md-6">
+                            <h5>잉크 용량: <span id="ink_capacity" class="fw-bold"></span> ml</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>닙 깊이: <span id="nib_depth" class="fw-bold"></span></h5>
+                        </div>
+                        <hr>
+                        <div class="col-md-6">
+                            <h5 class="fs-6">바디 결합 여부: <span id="assembly_body" class="fw-bold fs-6"></span></h5>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="fs-6">뚜껑 결합 여부: <span id="assembly_cap" class="fw-bold fs-6"></span></h5>
+                        </div>
+                        <hr>
+                        <div class="col-md-12">
+                            <h5 class="mb-3">적합/부적합 여부: </h5>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="acceptance" id="acceptanceG" value="P">
+                                <label class="form-check-label fw-bold" for="acceptanceG">
+                                    적합
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="acceptance" id="acceptanceB" value="F">
+                                <label class="form-check-label fw-bold" for="acceptanceB">
+                                    부적합
+                                </label>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="col-md-12">
+                            <h5>생산 시작: <span id="start_date" class="fw-bold"></span></h5>
+                        </div>
+                        <div class="col-md-12">
+                            <h5>생산 종료: <span id="end_date" class="fw-bold"></span></h5>
+                        </div>
+                        <hr>
+                        <!--                        comment에 들어갈 내용 적는 부분 -->
+                        <div class="input-group col-md-12 input-group-lg">
+                            <span class="input-group-text fw-bold">세부 부적합 <br>사유 </span>
+                            <textarea id="comment" name="comment" class="form-control" rows="8" aria-label="세부 부적합 사유">
+
+                            </textarea>
+                        </div>
+                        <!--                        내가 선택한 제품의 comment를 바꿔야하니까 그 제품을 특정할 수 있는 아이디를 form에 부여-->
+                        <input type="hidden" id="product_id" name="product_id">
+                    </form>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">닫기</button>
+                        <!--                        onclick시 Conroller에 데이터를 보내는 자바 스크립트 실행-->
+                        <button type="submit" class="btn btn-primary" onclick="saveComment()">수정</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  ```
 </details>
 <br><br><br><br>
 
