@@ -171,13 +171,6 @@
   4공정이 종료된 후 생산된 제품과 Lot을 데이터 베이스에 저장하는 메서드 실행
   
 ```java
-  @Service
-  @Slf4j
-  @RequiredArgsConstructor
-  public class ProcessService {
-  
-      private final StandardRepository standardRepository;
-      private final LotRepository lotRepository;
       private final LotService lotService;
       private final ProductRepository productRepository;
       private final WebSocketSenderService webSocketSenderService;
